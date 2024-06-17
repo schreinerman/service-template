@@ -1,0 +1,44 @@
+#!/bin/bash
+SCRIPT=$(realpath "$0")
+SCRIPT_NAME=$(basename -- "$SCRIPT") 
+SERVICE_NAME="${SCRIPT_NAME%.*}"
+
+install_script()
+{
+  echo Installing...
+  
+  chmod +x $SCRIPT
+
+  # Make sure service is stopped and disabled
+  systemctl stop $SERVICE_NAME
+  systemctl disable $SERVICE_NAME
+
+  # Generating service...
+
+cat << EOF > /etc/systemd/system/$SERVICE_NAME.service
+[Unit]
+
+Description=$SERVICE_NAME.service
+
+After=default.target
+
+[Service]
+
+ExecStart=$SCRIPT
+
+[Install]
+
+WantedBy=default.target
+
+EOF
+
+  # Start service
+  systemctl enable $SERVICE_NAME
+  systemctl start $SERVICE_NAME
+}
+
+if [ "$1" == "install" ]
+then
+  install_script
+  exit 0
+fi
